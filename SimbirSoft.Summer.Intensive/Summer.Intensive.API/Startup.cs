@@ -1,15 +1,13 @@
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
-using Microsoft.AspNetCore.HttpsPolicy;
-using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
-using Microsoft.Extensions.Logging;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
+using Summer.Intensive.DataBase;
+using Microsoft.EntityFrameworkCore;
+using Summer.Intensive.Core.PageService;
+using Summer.Intensive.DataBase.Repositories.Interfaces;
+using Summer.Intensive.DataBase.Repositories;
 
 namespace Summer.Intensive.API
 {
@@ -26,6 +24,15 @@ namespace Summer.Intensive.API
         public void ConfigureServices(IServiceCollection services)
         {
             services.AddControllers();
+
+            var connectionString = Configuration.GetConnectionString("DefaultConnection");
+            services.AddDbContext<DataContext>(options => options.UseSqlServer(connectionString));
+
+            services.AddScoped<IPageRepository, PageRepository>();
+            services.AddScoped<PageService>();
+            services.AddScoped<IPageService, PageService>(sp => sp.GetService<PageService>());
+
+            services.AddAuthorization();
         }
 
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.
@@ -39,7 +46,7 @@ namespace Summer.Intensive.API
             app.UseHttpsRedirection();
 
             app.UseRouting();
-
+            app.UseCors();
             app.UseAuthorization();
 
             app.UseEndpoints(endpoints =>
